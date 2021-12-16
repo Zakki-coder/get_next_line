@@ -1,29 +1,38 @@
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <stdio.h>
-#include "../get_next_line.h"
-#include <stdlib.h>
+#include "get_next_line.h"
 #include <unistd.h>
 
 int main(int argc, char **argv)
 {
-	char *line;
-	char buf[10];
-	int ret;
+	char *line = NULL;
+	int fd;
 
-	line = NULL;
-	int fd_1 = open("./test1", O_RDONLY);
-	int fd_2 = open("./test2", O_RDONLY);
-	if(fd_1 == -1)
-		return -1;
-	ret = get_next_line(fd_1, &line);
-	printf("%s\n", line);
-	ret = get_next_line(fd_2, &line);
-	printf("%s\n", line);
-	ret = get_next_line(fd_1, &line);
-	printf("%s\n", line);
-	ret = get_next_line(fd_2, &line);
-	printf("%s\n", line);
-	return (0);
+	printf("%d\n", argc);
+	if (argc == 1)
+	{
+		printf("For one line\n");
+		get_next_line(0, &line);
+		printf("%s", line);
+		printf("For two lines\n");
+		get_next_line(0, &line);
+		printf("%s", line);
+		get_next_line(fd, &line);
+		printf("%s", line);
+	}
+	else
+	{
+		fd = open(argv[1], O_RDONLY);
+		printf("For one line\n");
+		get_next_line(fd, &line);
+		printf("%s", line);
+		printf("For two lines\n");
+		get_next_line(fd, &line);
+		printf("%s", line);
+		get_next_line(fd, &line);
+		printf("%s", line);
+	}
+	return 0;
 }
