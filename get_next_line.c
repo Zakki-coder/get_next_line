@@ -6,132 +6,151 @@
 /*   By: jniemine <jniemine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/05 14:21:44 by jniemine          #+#    #+#             */
-/*   Updated: 2021/12/16 23:44:40 by jniemine         ###   ########.fr       */
+/*   Updated: 2021/12/30 22:40:38 by jniemine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 #include <stdlib.h>
 #include <unistd.h>
-#include <stdio.h>     //DELEETEEE
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
-typedef struct	s_hash_node
-{
-	void				*value;
-	int					key;
-	size_t					position;
-	struct	s_hash_node	*next;
-}						t_hashNode;
-
 t_hashNode *ft_new_hash_node(int	key, void *value)
 {
 	t_hashNode *new_node;
 
-	new_node = (t_hashNode *)malloc(sizeof(t_hashNode));
+	new_node = (t_hashNode *)ft_memalloc(sizeof(t_hashNode));
+	if (new_node == NULL)
+		return (NULL);
 	(*new_node).key = key;
-	(*new_node).value = value;
+	if (value != NULL)
+		(*new_node).value = value;
+	else
+		(*new_node).value = (void *)ft_memalloc(sizeof(signed char) * (BUFF_SIZE + 1));
+	if ((*new_node).value == NULL)
+		return (NULL);
 	(*new_node).position = 0;
+	(*new_node).eof = 0;
 	(*new_node).next = NULL;
-
 	return (new_node);
 }
 
-void	ft_addhash(t_hashNode **hashlst, t_hashNode *new)
+t_list *search_key_return_buff(int key, t_list *head)
 {
-	t_hashNode	*new_next;
-
-			if (new == NULL || hashlst == NULL)
-				return ;
-			if (*hashlst == NULL)
-			{
-				*hashlst = new;
-				return ;
-			}
-			new_next = *hashlst;
-			*hashlst = new;
-			(*new).next = new_next;
-}
-
-		int calculate_hash (int fd)
-		{
-			return (fd % 100);
-		}
-
-t_hashNode *search_key_return_buff(int key, t_hashNode *head)
-{
-	while (head != NULL && head->key != key)
+	while (head != NULL && ((t_hashNode *)head->content)->key != key)
 		head = head->next;
 	if (head == NULL)
 		return (NULL);
 	else
-		return ((head));
+		return (head);
 }
-//TODO IMPLEMENT WITH ONLY POSITION REMOVE MEMMOVE
+/*
+//Make a reader function, takes node as param, returns return of read?
+int reader (t_hashNode *node)
+{	
+	int temp_buf;
+	int len;
+
+	if (node == NULL)
+	{
+		temp_buf = (int *)malloc(sizeof(sizeof(*temp_buf) * BUFF_SIZE + 1));
+		if (temp_buf == NULL)
+			return (-1);
+		len = read(fd, temp_buf, BUFF_SIZE);
+		if (len == -1)
+			return (-1);
+		if (len < BUFF_SIZE)
+			temp_buf[len + 1] = -1;
+		ft_lstadd(&hash[hash_code], ft_lstnew(ft_new_hash_node(fd, (void *)temp_buf), sizeof(t_hashNode)));
+		node = (t_hashNode *)hash[hash_code]->content;
+	}
+	else
+	{
+		len = read(fd, temp_buf, BUFF_SIZE);
+		if (len == -1)
+			return (-1);
+		if (len < BUFF_SIZE)
+			temp_buf[len + 1] = -1;
+	}
+}
+*/
 int get_next_line(const int fd, char **line)
 {
-	//Can line be NULL?	
-	size_t len;
+	ssize_t len;
 	size_t i;
 	size_t t_i;
-	//Create hashlist for defaul of 1024 filedescriptors, but scalable to infinity
-//	static char temp_array[BUFF_SIZE] = {'\0'};
-//	char *temp_buf = temp_array;
-	static t_hashNode *hash[100] = {NULL};
-	char **temp_buf = (char **)malloc(sizeof(temp_buf));
-	t_hashNode *node = (t_hashNode *)malloc(sizeof(node));
+	int hash_code;
+	static t_list *hash[100] = {NULL};
+	t_hashNode *node;
+	t_list *lst_node;
 
 	i = 0;
 	len = 1;
-//	if (temp_array[0] == '\0')
-//		len = read(fd, temp_buf, BUFF_SIZE);
-	
-	*line  = (char *)malloc(sizeof(**line) * BUFF_SIZE + 1);
-	node = search_key_return_buff(fd, hash[calculate_hash(fd)]);
-	if (node == NULL /*|| **temp_buf == '\n'*/)
+	hash_code = fd % 100;
+	if (line == NULL)
+		return (-1);
+	*line  = (char *)ft_memalloc(sizeof(**line) * BUFF_SIZE);
+	if (*line == NULL)
+		return (-1);
+	lst_node = search_key_return_buff(fd, hash[hash_code]);
+	if (lst_node == NULL)
 	{
-		temp_buf = (char **)malloc(sizeof(*temp_buf));
-		*temp_buf = (char *)malloc(sizeof(**temp_buf) * BUFF_SIZE);
-		len = read(fd, *temp_buf, BUFF_SIZE);
-		ft_addhash(&hash[calculate_hash(fd)], ft_new_hash_node(fd, (void *)*temp_buf));
-		node = hash[calculate_hash(fd)];
-	}
-	*temp_buf = node->value;
-	t_i = 0;
-	int position = node->position;
-	while (len && *(*temp_buf + t_i) != '\n')
-	{
-		//write to line until \n
-	//	while (len && temp_buf[t_i] != '\n')
-	//	{
-			(*line)[i++] = (*temp_buf)[t_i++];
-			position++;
-	//		printf("%s\n", *line);				//DELETEEE
-	//	}
-		//if no \n found alloc more space 
-		//this never activates when reading from buff and buff_size > word
-		if (position == BUFF_SIZE && len && (*temp_buf)[t_i] != '\n')
+		node = ft_new_hash_node(fd, NULL);
+		if (node == NULL)
+			return (-1);
+		len = read(fd, node->value, BUFF_SIZE);
+		if (len == -1)
 		{
-			len = read(fd, *temp_buf, BUFF_SIZE);
-			*line = ft_realloc(*line, i, i + len + 1);
-			t_i = 0;
-			position = 0;
+			free (node->value);
+			free (node);
+			return (-1);
 		}
-			//protect also the real function
-		//protect
-		//t_i = 0;
+		if (len < BUFF_SIZE)
+			((signed char *)node->value)[len] = -1;
+		if (len == 0)
+			return (0);
+		lst_node = ft_lstnew(node, sizeof(t_hashNode));
+		ft_lstadd(&hash[hash_code], lst_node);
+		free (node);
 	}
-		(*line)[i] = (*temp_buf)[t_i];
-		//Better size for memmove?
-		//*(*temp_buf) = 127;
-		//**temp_buf += 1;
-		//printf("Hello: %s\n", *temp_buf);
-		ft_memmove(*temp_buf, *temp_buf + (++t_i), BUFF_SIZE - t_i);
-		node->position = ++position;
-		//what should it do with multiple \n
-			//repeat
+	node = (t_hashNode *)lst_node->content;
+	t_i = node->position;
+	if (node->eof)
+	{
+		free (node->value);
+		ft_lstdelany(&hash[hash_code], lst_node);
+		free (lst_node);
+		return (0);
+	}
+	while (((signed char *)node->value)[t_i] >= 0 && len && ((signed char *)node->value)[t_i] != '\n')
+	{
+		if (t_i == BUFF_SIZE && len && ((signed char *)node->value)[t_i] != '\n')
+		{
+			len = read(fd, node->value, BUFF_SIZE);
+			if (len == -1)
+			{
+				free (node->value);
+				free (node);
+				return (-1);
+			}
+			if (len < BUFF_SIZE)
+				((signed char *)node->value)[len] = -1;
+//			if (len == 0)
+//				return (0);
+			*line = ft_realloc(*line, i, i + len + 1);
+			if (line == NULL)
+				return (-1);
+			t_i = 0;
+		}
+			if (((signed char *)node->value)[t_i] != '\n' && ((signed char *)node->value)[t_i] >= 0)
+				(*line)[i++] = ((signed char *)node->value)[t_i++];
+	}
+	if (((signed char *)node->value)[t_i] == '\n')
+		node->position = (++t_i);
+	if (((signed char *)node->value)[t_i] == -1)
+		node->eof = 1;
 	return (1);
 }

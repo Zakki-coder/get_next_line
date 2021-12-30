@@ -6,13 +6,13 @@
 #    By: jniemine <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/11/23 16:50:01 by jniemine          #+#    #+#              #
-#    Updated: 2021/11/30 17:40:52 by jniemine         ###   ########.fr        #
+#    Updated: 2021/12/22 17:09:44 by jniemine         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = libft.a
 
-CFLAG = -Wall -Wextra -Werror
+CFLAG = -Wall -Wextra -Werror -I"./includes"
 
 SRC = 	ft_atoi.c       \
 		ft_bzero.c      \
@@ -72,7 +72,9 @@ SRC = 	ft_atoi.c       \
 		ft_lstadd.c		\
 		ft_lstiter.c	\
 		ft_lstmap.c		\
-		ft_freeda.c
+		ft_freeda.c		\
+		ft_realloc.c	\
+		ft_lstdelany.c
 
 OBJ =	ft_atoi.o       \
 		ft_bzero.o      \
@@ -132,12 +134,14 @@ OBJ =	ft_atoi.o       \
 		ft_lstadd.o		\
 		ft_lstiter.o	\
 		ft_lstmap.o		\
-		ft_freeda.o
+		ft_freeda.o		\
+		ft_realloc.o	\
+		ft_lstdelany.o
 
 all: $(NAME)
 
 $(NAME):
-	gcc -c $(SRC) libft.h $(CFLAG)
+	gcc -c $(SRC) $(CFLAG)
 	ar rc $(NAME) $(OBJ)
 
 clean:

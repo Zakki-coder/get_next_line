@@ -6,7 +6,7 @@
 /*   By: jniemine <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/25 19:34:23 by jniemine          #+#    #+#             */
-/*   Updated: 2021/11/26 18:22:37 by jniemine         ###   ########.fr       */
+/*   Updated: 2021/12/22 19:13:36 by jniemine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ t_list	*ft_lstnew(void const *content, size_t content_size)
 {
 	t_list	*res;
 
-	res = malloc(sizeof(t_list));
+	res = ft_memalloc(sizeof(t_list));
 	if (res == NULL)
 	{
 		free (res);
