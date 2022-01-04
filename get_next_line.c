@@ -6,7 +6,7 @@
 /*   By: jniemine <jniemine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/05 14:21:44 by jniemine          #+#    #+#             */
-/*   Updated: 2021/12/30 22:40:38 by jniemine         ###   ########.fr       */
+/*   Updated: 2022/01/04 18:58:09 by jniemine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,10 +83,12 @@ int get_next_line(const int fd, char **line)
 	size_t i;
 	size_t t_i;
 	int hash_code;
+	int newline;
 	static t_list *hash[100] = {NULL};
 	t_hashNode *node;
 	t_list *lst_node;
 
+	newline = 0;
 	i = 0;
 	len = 1;
 	hash_code = fd % 100;
@@ -108,8 +110,8 @@ int get_next_line(const int fd, char **line)
 			free (node);
 			return (-1);
 		}
-		if (len < BUFF_SIZE)
-			((signed char *)node->value)[len] = -1;
+//		if (len < BUFF_SIZE)
+//			((signed char *)node->value)[len] = -1;
 		if (len == 0)
 			return (0);
 		lst_node = ft_lstnew(node, sizeof(t_hashNode));
@@ -118,13 +120,13 @@ int get_next_line(const int fd, char **line)
 	}
 	node = (t_hashNode *)lst_node->content;
 	t_i = node->position;
-	if (node->eof)
-	{
-		free (node->value);
-		ft_lstdelany(&hash[hash_code], lst_node);
-		free (lst_node);
-		return (0);
-	}
+//	if (node->eof)
+//	{
+//		free (node->value);
+//		ft_lstdelany(&hash[hash_code], lst_node);
+//		free (lst_node);
+//		return (0);
+//	}
 	while (((signed char *)node->value)[t_i] >= 0 && len && ((signed char *)node->value)[t_i] != '\n')
 	{
 		if (t_i == BUFF_SIZE && len && ((signed char *)node->value)[t_i] != '\n')
@@ -136,21 +138,32 @@ int get_next_line(const int fd, char **line)
 				free (node);
 				return (-1);
 			}
-			if (len < BUFF_SIZE)
-				((signed char *)node->value)[len] = -1;
-//			if (len == 0)
-//				return (0);
+//			if (len < BUFF_SIZE)
+//				((signed char *)node->value)[len] = -1;
 			*line = ft_realloc(*line, i, i + len + 1);
 			if (line == NULL)
 				return (-1);
 			t_i = 0;
 		}
-			if (((signed char *)node->value)[t_i] != '\n' && ((signed char *)node->value)[t_i] >= 0)
-				(*line)[i++] = ((signed char *)node->value)[t_i++];
-	}
-	if (((signed char *)node->value)[t_i] == '\n')
-		node->position = (++t_i);
-	if (((signed char *)node->value)[t_i] == -1)
-		node->eof = 1;
-	return (1);
+		while (t_i < BUFF_SIZE && ((signed char *)node->value)[t_i] != '\n' && ((signed char *)node->value)[t_i] >= 0)
+			(*line)[i++] = ((signed char *)node->value)[t_i++];
+		}
+		if (t_i < BUFF_SIZE && ((signed char *)node->value)[t_i] == '\n')
+		{
+			newline = 1;
+			node->position = (++t_i);
+			}
+//		if (t_i <= BUFF_SIZE && ((signed char *)node->value)[t_i] == -1)
+//			node->eof = 1;
+	if (i > 0 || newline)
+		return (1);	
+	else
+	{
+		free (node->value);
+		ft_lstdelany(&hash[hash_code], lst_node);
+		free (lst_node);
+		return (0);
+		}
+
+	return (0);
 }

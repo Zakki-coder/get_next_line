@@ -27,6 +27,8 @@ int				main(void)
 		line = NULL;
 		while ((ret = get_next_line(fd, &line)) > 0)
 		{
+			printf("%d\n", ret);
+			printf("%s\n", line);
 			if (count_lines == 0 && strcmp(line, "This is the first line") != 0)
 				errors++;
 			if (count_lines == 1 && strcmp(line, "This is the second one") != 0)
@@ -40,6 +42,7 @@ int				main(void)
 			if (count_lines > 50)
 				break ;
 		}
+			printf("%d\n", ret);
 		close(fd);
 		if (count_lines != 4)
 			printf("-> must have returned '1' four times instead of %d time(s)\n", count_lines);
