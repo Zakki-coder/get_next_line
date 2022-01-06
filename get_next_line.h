@@ -9,7 +9,7 @@ typedef struct	s_hash_node
 	void				*value;
 	int					key;
 	int					eof;
-	size_t				position;
+	size_t				p;
 	struct	s_hash_node	*next;
 }						t_hashNode;
 

@@ -27,7 +27,7 @@ int				main(void)
 		line = NULL;
 		while ((ret = get_next_line(fd, &line)) > 0)
 		{
-			printf("%d\n", ret);
+//			printf("%d\n", ret);
 			printf("%s\n", line);
 			if (count_lines == 0 && strcmp(line, "This is the first line") != 0)
 				errors++;
