@@ -14,6 +14,7 @@ int main(void)
 	int fd2;
 	int fd3;
 	int	diff_file_size;
+	char buff[10];
     
     system("mkdir -p sandbox");
 	system("openssl rand -base64 $((30 * 1000 * 3/4)) | tr -d '\n' | tr -d '\r' > sandbox/one_big_fat_line.txt");
@@ -34,9 +35,9 @@ int main(void)
 
 	system("diff sandbox/one_big_fat_line.txt sandbox/one_big_fat_line.txt.mine > sandbox/one_big_fat_line.diff");
 	fd3 = open("sandbox/one_big_fat_line.diff", O_RDONLY);
-	diff_file_size = read(fd3, NULL, 10);
+	diff_file_size = read(fd3, buff, 10);
 	close(fd3);
 	
-	printf ("diff_size: %d\n", diff_file_size);
+	printf ("diff_size is: %d\tshould be: 0\n", diff_file_size);
 	return (0);
 }
