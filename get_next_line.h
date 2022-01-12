@@ -6,7 +6,7 @@
 /*   By: jniemine <jniemine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/12 00:30:29 by jniemine          #+#    #+#             */
-/*   Updated: 2022/01/12 22:15:22 by jniemine         ###   ########.fr       */
+/*   Updated: 2022/01/12 22:22:37 by jniemine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 # define GET_NEXT_LINE_H
 
 # include "libft.h"
-# define BUFF_SIZE 65536
+# define BUFF_SIZE 8
 
 typedef struct s_hash_node
 {
