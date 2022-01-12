@@ -47,5 +47,6 @@ int				main(void)
 		printf("OK\n");
 	else
 		printf("An ERROR\n");
+	free(line);
 	return (0);
 }

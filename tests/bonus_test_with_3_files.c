@@ -5,6 +5,7 @@
 #include "get_next_line.h"
 #include <stdio.h>
 #include <assert.h>
+#include <stdlib.h>
 
 int main(void)
 {	
@@ -22,40 +23,52 @@ int main(void)
 	ret = get_next_line(fd1, &line);
 	printf("%s\tret: %d\n", line, ret);
 	assert(ret == 1);
+	free (line);
 	ret = get_next_line(fd2, &line);
 	printf("%s\tret: %d\n", line, ret);
 	assert(ret == 1);
+	free (line);
 	ret = get_next_line(fd3, &line);
 	printf("%s\tret: %d\n", line, ret);
 	assert(ret == 1);
+	free (line);
 	ret = get_next_line(fd1, &line);
 	printf("%s\tret: %d\n", line, ret);
 	assert(ret == 1);
+	free (line);
 	ret = get_next_line(fd2, &line);
 	printf("%s\tret: %d\n", line, ret);
 	assert(ret == 1);
+	free (line);
 	ret = get_next_line(fd3, &line);
 	printf("%s\tret: %d\n", line, ret);
 	assert(ret == 1);
+	free (line);
 
 	printf("Call twice more, after eof is reached\n");
 	ret = get_next_line(fd1, &line);
 	printf("%sret: %d\n", line, ret);
 	assert(ret == 0);
+	free (line);
 	ret = get_next_line(fd2, &line);
 	printf("%sret: %d\n", line, ret);
 	assert(ret == 0);
+	free (line);
 	ret = get_next_line(fd3, &line);
 	printf("%sret: %d\n", line, ret);
 	assert(ret == 0);
+	free (line);
 	ret = get_next_line(fd1, &line);
 	printf("%sret: %d\n", line, ret);
 	assert(ret == 0);
+	free (line);
 	ret = get_next_line(fd2, &line);
 	printf("%sret: %d\n", line, ret);
 	assert(ret == 0);
+	free (line);
 	ret = get_next_line(fd3, &line);
 	printf("%sret: %d\n", line, ret);
 	assert(ret == 0);
+	free (line);
 	return (0);
 }	

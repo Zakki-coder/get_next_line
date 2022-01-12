@@ -6,11 +6,12 @@
 /*   By: jniemine <jniemine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/05 14:21:44 by jniemine          #+#    #+#             */
-/*   Updated: 2022/01/11 18:56:14 by jniemine         ###   ########.fr       */
+/*   Updated: 2022/01/12 21:26:22 by jniemine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
+#include "libft.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <unistd.h>
@@ -63,9 +64,9 @@ int	reader(char **line, t_hashNode **node, size_t old_size)
 t_list	*search_for_key(int key, t_list **head, char **line, ssize_t *len)
 {
 	t_hashNode	*node;
-	t_list		**lst_start;
+	t_list		*lst_start;
 
-	lst_start = head;
+	lst_start = *head;
 	if (*line == NULL)
 		return (NULL);
 	while (head != NULL && *head != NULL && (*head)->content != NULL
@@ -74,11 +75,13 @@ t_list	*search_for_key(int key, t_list **head, char **line, ssize_t *len)
 	if (*head == NULL || (*head)->content == NULL)
 	{
 		node = ft_new_hash_node(key, NULL);
+		if (node == NULL)
+			return (NULL);
 		*len = reader(line, &node, 0);
-		if (*len <= 0)
+		if (*len == -1)
 			return (NULL);
 		*head = ft_lstnew(node, sizeof(t_hashNode));
-		ft_lstadd(lst_start, *head);
+		ft_lstadd(&lst_start, *head);
 		free (node);
 	}
 	return (*head);
@@ -98,7 +101,7 @@ int	write_to_line(char **line, size_t *i, t_list *lst_node, t_list **hash)
 			if (reader(line, &node, *i) == -1)
 				return (-1);
 		while (node->p < BUFF_SIZE && ((char *)node->v)[node->p] != '\n'
-		&& ((char *)node->v)[node->p] >= 0)
+		&& ((char *)node->v)[node->p] != -1)
 			(*line)[(*i)++] = ((char *)node->v)[node->p++];
 	}
 	if (node->p < BUFF_SIZE && ((char *)node->v)[node->p] == '\n' && ++node->p)
@@ -115,7 +118,7 @@ int	get_next_line(const int fd, char **line)
 {
 	ssize_t			len;
 	size_t			i;
-	static t_list	*hash[100] = {NULL};
+	static t_list	*hash[10] = {NULL};
 	t_list			*lst_node;
 
 	i = 0;
@@ -123,10 +126,15 @@ int	get_next_line(const int fd, char **line)
 	if (line == NULL)
 		return (-1);
 	*line = (char *)ft_memalloc(sizeof(**line) * BUFF_SIZE + 1);
-	lst_node = search_for_key(fd, &(hash[fd % 100]), line, &len);
+	lst_node = search_for_key(fd, &(hash[fd % 9]), line, &len);
 	if (len == 0)
+	{
+		free (((t_hashNode *)lst_node->content)->v);
+		ft_lstdelany(&hash[fd % 9], lst_node);
+		free (lst_node);
 		return (0);
+	}
 	if (lst_node == NULL && len != 0)
 		return (-1);
-	return (write_to_line(line, &i, lst_node, &(hash[fd % 100])));
+	return (write_to_line(line, &i, lst_node, &(hash[fd % 9])));
 }
