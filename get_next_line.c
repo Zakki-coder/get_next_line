@@ -6,7 +6,7 @@
 /*   By: jniemine <jniemine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/05 14:21:44 by jniemine          #+#    #+#             */
-/*   Updated: 2022/01/12 21:26:22 by jniemine         ###   ########.fr       */
+/*   Updated: 2022/01/13 23:09:40 by jniemine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,14 +38,17 @@ t_hashNode	*ft_new_hash_node(int key, void *value)
 	return (new_node);
 }
 
-int	reader(char **line, t_hashNode **node, size_t old_size)
+int	reader(t_line *wrap, t_hashNode **node, size_t old_size)
 {	
 	ssize_t	len;
 
 	if (*node == NULL)
 		return (-1);
-	len = read((*node)->key, (*node)->v, BUFF_SIZE);
-	(*node)->p = 0;
+	if (old_size == 0 || ((*node)->p == BUFF_SIZE))
+	{
+		len = read((*node)->key, (*node)->v, BUFF_SIZE);
+		(*node)->p = 0;
+	}
 	if (len == -1)
 	{
 		free ((*node)->v);
@@ -54,20 +57,23 @@ int	reader(char **line, t_hashNode **node, size_t old_size)
 	}
 	if (len < BUFF_SIZE)
 		((signed char *)(*node)->v)[len] = -1;
-	if (old_size > 0)
-		*line = ft_realloc(*line, old_size, old_size + (len) + 1);
-	if (*line == NULL)
+	if (old_size >= wrap->space || old_size == 0)
+	{
+		wrap->space = 3 * old_size / 2 + 1000;
+		*wrap->line = ft_realloc(*wrap->line, old_size, wrap->space);
+	}
+	if (*wrap->line == NULL)
 		return (-1);
 	return (len);
 }
 
-t_list	*search_for_key(int key, t_list **head, char **line, ssize_t *len)
+t_list	*search_for_key(int key, t_list **head, t_line *wrap, ssize_t *len)
 {
 	t_hashNode	*node;
 	t_list		*lst_start;
 
 	lst_start = *head;
-	if (*line == NULL)
+	if (*wrap->line == NULL)
 		return (NULL);
 	while (head != NULL && *head != NULL && (*head)->content != NULL
 		&& ((t_hashNode *)(*head)->content)->key != key)
@@ -77,7 +83,7 @@ t_list	*search_for_key(int key, t_list **head, char **line, ssize_t *len)
 		node = ft_new_hash_node(key, NULL);
 		if (node == NULL)
 			return (NULL);
-		*len = reader(line, &node, 0);
+		*len = reader(wrap, &node, 0);
 		if (*len == -1)
 			return (NULL);
 		*head = ft_lstnew(node, sizeof(t_hashNode));
@@ -87,26 +93,24 @@ t_list	*search_for_key(int key, t_list **head, char **line, ssize_t *len)
 	return (*head);
 }
 
-int	write_to_line(char **line, size_t *i, t_list *lst_node, t_list **hash)
+int	write_to_line(t_line *wrap, t_list *lst_node, t_list **hash)
 {
-	int			newline;
 	t_hashNode	*node;
 
+	wrap->i = 0;
 	node = lst_node->content;
-	newline = 0;
 	while (((char *)node->v)[node->p] >= 0
 	&& ((char *)node->v)[node->p] != '\n')
 	{
-		if (node->p == BUFF_SIZE && ((char *)node->v)[node->p] != '\n')
-			if (reader(line, &node, *i) == -1)
+		if ((node->p == BUFF_SIZE && ((char *)node->v)[node->p] != '\n')
+		|| wrap->i == wrap->space)
+			if (reader(wrap, &node, wrap->i) == -1)
 				return (-1);
 		while (node->p < BUFF_SIZE && ((char *)node->v)[node->p] != '\n'
-		&& ((char *)node->v)[node->p] != -1)
-			(*line)[(*i)++] = ((char *)node->v)[node->p++];
+		&& ((char *)node->v)[node->p] != -1 && wrap->i < wrap->space)
+			(*wrap->line)[wrap->i++] = ((char *)node->v)[node->p++];
 	}
-	if (node->p < BUFF_SIZE && ((char *)node->v)[node->p] == '\n' && ++node->p)
-		newline = 1;
-	if (*i > 0 || newline)
+	if ((((char *)node->v)[node->p] == '\n' && ++node->p) || wrap->i > 0)
 		return (1);
 	free (node->v);
 	ft_lstdelany(hash, lst_node);
@@ -116,25 +120,28 @@ int	write_to_line(char **line, size_t *i, t_list *lst_node, t_list **hash)
 
 int	get_next_line(const int fd, char **line)
 {
+	int				code;
 	ssize_t			len;
-	size_t			i;
 	static t_list	*hash[10] = {NULL};
 	t_list			*lst_node;
+	t_line			wrap;
 
-	i = 0;
+	code = fd % 9;
+	wrap.space = 3 * BUFF_SIZE / 2 + 1000;
 	len = 1;
 	if (line == NULL)
 		return (-1);
-	*line = (char *)ft_memalloc(sizeof(**line) * BUFF_SIZE + 1);
-	lst_node = search_for_key(fd, &(hash[fd % 9]), line, &len);
+	*line = (char *)ft_memalloc(sizeof(**line) * wrap.space);
+	wrap.line = line;
+	lst_node = search_for_key(fd, &(hash[code]), &wrap, &len);
 	if (len == 0)
 	{
 		free (((t_hashNode *)lst_node->content)->v);
-		ft_lstdelany(&hash[fd % 9], lst_node);
+		ft_lstdelany(&hash[code], lst_node);
 		free (lst_node);
 		return (0);
 	}
 	if (lst_node == NULL && len != 0)
 		return (-1);
-	return (write_to_line(line, &i, lst_node, &(hash[fd % 9])));
+	return (write_to_line(&wrap, lst_node, &(hash[code])));
 }

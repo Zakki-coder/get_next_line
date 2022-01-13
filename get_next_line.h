@@ -6,7 +6,7 @@
 /*   By: jniemine <jniemine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/12 00:30:29 by jniemine          #+#    #+#             */
-/*   Updated: 2022/01/12 22:22:37 by jniemine         ###   ########.fr       */
+/*   Updated: 2022/01/13 21:40:15 by jniemine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,13 @@ typedef struct s_hash_node
 	size_t				p;
 	struct s_hash_node	*next;
 }						t_hashNode;
+
+typedef struct s_line
+{
+	size_t	i;
+	size_t	space;
+	char	**line;
+}			t_line;
 
 int	get_next_line(const int fd, char **line);
 
