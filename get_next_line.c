@@ -6,18 +6,12 @@
 /*   By: jniemine <jniemine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/05 14:21:44 by jniemine          #+#    #+#             */
-/*   Updated: 2022/01/13 23:09:40 by jniemine         ###   ########.fr       */
+/*   Updated: 2022/01/16 21:49:48 by jniemine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-#include "libft.h"
-#include <stdlib.h>
-#include <unistd.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#include <stdio.h>
 
 t_hashNode	*ft_new_hash_node(int key, void *value)
 {
@@ -42,24 +36,23 @@ int	reader(t_line *wrap, t_hashNode **node, size_t old_size)
 {	
 	ssize_t	len;
 
-	if (*node == NULL)
-		return (-1);
+	len = 1;
 	if (old_size == 0 || ((*node)->p == BUFF_SIZE))
 	{
 		len = read((*node)->key, (*node)->v, BUFF_SIZE);
 		(*node)->p = 0;
+		if (len == -1)
+		{
+			free ((*node)->v);
+			free (*node);
+			return (-1);
+		}
+		if (len < BUFF_SIZE)
+			((signed char *)(*node)->v)[len] = -1;
 	}
-	if (len == -1)
-	{
-		free ((*node)->v);
-		free (*node);
-		return (-1);
-	}
-	if (len < BUFF_SIZE)
-		((signed char *)(*node)->v)[len] = -1;
 	if (old_size >= wrap->space || old_size == 0)
 	{
-		wrap->space = 3 * old_size / 2 + 1000;
+		wrap->space = 3 * wrap->space / 2 + 1000;
 		*wrap->line = ft_realloc(*wrap->line, old_size, wrap->space);
 	}
 	if (*wrap->line == NULL)
@@ -99,7 +92,7 @@ int	write_to_line(t_line *wrap, t_list *lst_node, t_list **hash)
 
 	wrap->i = 0;
 	node = lst_node->content;
-	while (((char *)node->v)[node->p] >= 0
+	while (((char *)node->v)[node->p] != -1
 	&& ((char *)node->v)[node->p] != '\n')
 	{
 		if ((node->p == BUFF_SIZE && ((char *)node->v)[node->p] != '\n')
@@ -127,9 +120,9 @@ int	get_next_line(const int fd, char **line)
 	t_line			wrap;
 
 	code = fd % 9;
-	wrap.space = 3 * BUFF_SIZE / 2 + 1000;
+	wrap.space = BUFF_SIZE + 1;
 	len = 1;
-	if (line == NULL)
+	if (line == NULL || fd < 0 || fd > 10240)
 		return (-1);
 	*line = (char *)ft_memalloc(sizeof(**line) * wrap.space);
 	wrap.line = line;
