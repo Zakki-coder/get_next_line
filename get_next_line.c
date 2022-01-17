@@ -6,12 +6,11 @@
 /*   By: jniemine <jniemine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/05 14:21:44 by jniemine          #+#    #+#             */
-/*   Updated: 2022/01/16 21:49:48 by jniemine         ###   ########.fr       */
+/*   Updated: 2022/01/17 10:27:59 by jniemine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-#include <stdio.h>
 
 t_hashNode	*ft_new_hash_node(int key, void *value)
 {
@@ -32,32 +31,29 @@ t_hashNode	*ft_new_hash_node(int key, void *value)
 	return (new_node);
 }
 
-int	reader(t_line *wrap, t_hashNode **node, size_t old_size)
+ssize_t	reader(t_line *wrap, t_hashNode **node, size_t old_size, ssize_t *len)
 {	
-	ssize_t	len;
-
-	len = 1;
 	if (old_size == 0 || ((*node)->p == BUFF_SIZE))
 	{
-		len = read((*node)->key, (*node)->v, BUFF_SIZE);
+		*len = read((*node)->key, (*node)->v, BUFF_SIZE);
 		(*node)->p = 0;
-		if (len == -1)
+		if (*len == -1)
 		{
 			free ((*node)->v);
 			free (*node);
 			return (-1);
 		}
-		if (len < BUFF_SIZE)
-			((signed char *)(*node)->v)[len] = -1;
+		if (*len < BUFF_SIZE)
+			((signed char *)(*node)->v)[*len] = -1;
 	}
 	if (old_size >= wrap->space || old_size == 0)
 	{
 		wrap->space = 3 * wrap->space / 2 + 1000;
-		*wrap->line = ft_realloc(*wrap->line, old_size, wrap->space);
+		*wrap->line = ft_realloc(*wrap->line, old_size, wrap->space + 1);
 	}
 	if (*wrap->line == NULL)
 		return (-1);
-	return (len);
+	return (*len);
 }
 
 t_list	*search_for_key(int key, t_list **head, t_line *wrap, ssize_t *len)
@@ -68,7 +64,7 @@ t_list	*search_for_key(int key, t_list **head, t_line *wrap, ssize_t *len)
 	lst_start = *head;
 	if (*wrap->line == NULL)
 		return (NULL);
-	while (head != NULL && *head != NULL && (*head)->content != NULL
+	while (*head != NULL && (*head)->content != NULL
 		&& ((t_hashNode *)(*head)->content)->key != key)
 		*head = (*head)->next;
 	if (*head == NULL || (*head)->content == NULL)
@@ -76,7 +72,7 @@ t_list	*search_for_key(int key, t_list **head, t_line *wrap, ssize_t *len)
 		node = ft_new_hash_node(key, NULL);
 		if (node == NULL)
 			return (NULL);
-		*len = reader(wrap, &node, 0);
+		*len = reader(wrap, &node, 0, len);
 		if (*len == -1)
 			return (NULL);
 		*head = ft_lstnew(node, sizeof(t_hashNode));
@@ -86,7 +82,7 @@ t_list	*search_for_key(int key, t_list **head, t_line *wrap, ssize_t *len)
 	return (*head);
 }
 
-int	write_to_line(t_line *wrap, t_list *lst_node, t_list **hash)
+int	write_to_line(t_line *wrap, t_list *lst_node, t_list **hash, ssize_t *len)
 {
 	t_hashNode	*node;
 
@@ -97,7 +93,7 @@ int	write_to_line(t_line *wrap, t_list *lst_node, t_list **hash)
 	{
 		if ((node->p == BUFF_SIZE && ((char *)node->v)[node->p] != '\n')
 		|| wrap->i == wrap->space)
-			if (reader(wrap, &node, wrap->i) == -1)
+			if (reader(wrap, &node, wrap->i, len) == -1)
 				return (-1);
 		while (node->p < BUFF_SIZE && ((char *)node->v)[node->p] != '\n'
 		&& ((char *)node->v)[node->p] != -1 && wrap->i < wrap->space)
@@ -115,11 +111,11 @@ int	get_next_line(const int fd, char **line)
 {
 	int				code;
 	ssize_t			len;
-	static t_list	*hash[10] = {NULL};
+	static t_list	*hash[100] = {NULL};
 	t_list			*lst_node;
 	t_line			wrap;
 
-	code = fd % 9;
+	code = fd % 99;
 	wrap.space = BUFF_SIZE + 1;
 	len = 1;
 	if (line == NULL || fd < 0 || fd > 10240)
@@ -136,5 +132,5 @@ int	get_next_line(const int fd, char **line)
 	}
 	if (lst_node == NULL && len != 0)
 		return (-1);
-	return (write_to_line(&wrap, lst_node, &(hash[code])));
+	return (write_to_line(&wrap, lst_node, &(hash[code]), &len));
 }

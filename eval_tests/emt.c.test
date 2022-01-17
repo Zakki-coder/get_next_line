@@ -1,0 +1,22 @@
+#include "get_next_line.h"
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char **argv)
+{
+	char *line = NULL;
+	int ret;
+
+	ret = 2;
+	if (argc == 2 && !strcmp(argv[1], "lol"))
+	{
+		while((ret = get_next_line(0, &line)) == 1)
+		{
+			printf("%s\n", line);
+			free (line);
+		}
+		printf("ret: %d\n", ret);
+	}
+	return (0);
+}
+
